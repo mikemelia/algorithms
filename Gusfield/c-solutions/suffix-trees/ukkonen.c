@@ -6,53 +6,61 @@
 
 char *text = "abcbdbebdebjkhldshhuhiasdauggdgywegasbjdbhajsdcsadlcgasldclasdclasbdclasbdlcguyggadslblasdlsadgofqoppqsd";
 
-typedef struct Node {
+typedef struct node {
   char *edge;
   int length;
-  struct Node *child;
-  struct Node *nextSibling;
-} node_t;
+  struct node *child;
+  struct node *nextSibling;
+} Node;
 
-typedef struct Tree {
-  node_t *firstChild;
-} tree_t;
+typedef struct tree {
+  Node *firstChild;
+} Tree;
+
+void *allocate(size_t amount) {
+  void *location = malloc(amount);
+  check_mem(location);
+  return location;
+ error:
+  exit(1);
+}
 
 #ifndef NDEBUG
-char *edgeTextFrom(node_t *node) {
-  char *label = malloc(sizeof(node->edge) * (node->length + 1));
+char *edge_text_from(Node *node) {
+  char *label = allocate(sizeof(node->edge) * (node->length + 1));
   memcpy(label, node->edge, node->length);
   memset(label + node->length, 0, 1);
   return label;
 }
 
-void printNode(node_t *node, int counter) {
+void print_node(Node *node, int counter) {
   while (node != 0) {
-    debug("%d: %s %d \n", counter++, edgeTextFrom(node), node->length);
+    debug("%d: %s %d \n", counter++, edge_text_from(node), node->length);
     if (node->child != 0) {
-      printNode(node->child, counter);
+      print_node(node->child, counter);
     }
-    debug("New Sibling for %s\n", edgeTextFrom(node));
+    debug("New Sibling for %s\n", edge_text_from(node));
     node = node->nextSibling;
   }
 }
 
-void printTree(tree_t *tree) {
-  node_t *child = tree->firstChild;
+void print_tree(Tree *tree) {
+  Node *child = tree->firstChild;
   int i = 0;
-  printNode(child, i);
+  print_node(child, i);
 }
 #endif
 
-int compareChars(char *first, char *second) {
+int compare_chars(char *first, char *second) {
   return *first == *second;
 }
 
-int hasNextSibling(node_t *node) {
+int has_next_sibling(Node *node) {
   return node->nextSibling != 0;
 }
 
-void addToAllNodes(tree_t *tree, int offset) {
-  node_t *node = tree->firstChild;
+void extend_all_nodes(Tree *tree, int offset) {
+  Node *node = tree->firstChild;
   while (node != 0) {
     if (node->length == 0) {
       node->length = 1;
@@ -64,50 +72,49 @@ void addToAllNodes(tree_t *tree, int offset) {
   }
 }
 
-void addNextChar(node_t *child, int counter) {
+void add_next_char(Node *child, int counter) {
   debug("child %c compared with %c\n", *(child->edge), *(text + counter));
-  while (!compareChars(child->edge, (text + counter)) && hasNextSibling(child)) {
+  while (!compare_chars(child->edge, (text + counter)) && has_next_sibling(child)) {
     child = child->nextSibling;
   }
 
-  if (compareChars(child->edge, (text + counter))) {
+  if (compare_chars(child->edge, (text + counter))) {
     debug("Creating a child for %s\n", child->edge);
-    node_t *firstChild = malloc(sizeof(node_t));
+    Node *firstChild = malloc(sizeof(Node));
     firstChild->edge = child->edge + 1;
     firstChild->length = child->length - 1;
     child->child = firstChild;
     child->length = 1;
-    node_t *sibling = malloc(sizeof(node_t));
+    Node *sibling = malloc(sizeof(Node));
     sibling->length = 0;
     firstChild->nextSibling = sibling;
   } else {
-    node_t *nextSibling = malloc(sizeof(node_t));
+    Node *nextSibling = malloc(sizeof(Node));
     nextSibling->edge = (text + counter);
     nextSibling->length = 1;
     child->nextSibling = nextSibling;
   }
 }
 
-void addNextTree(tree_t *tree, int counter, int length) {
+void add_next_tree(Tree *tree, int counter, int length) {
   debug("Processing %s\n", text + counter);
-  addToAllNodes(tree, counter);
-  node_t *child = tree->firstChild;
-  addNextChar(child, counter);
+  extend_all_nodes(tree, counter);
+  Node *child = tree->firstChild;
+  add_next_char(child, counter);
 }
-
 
 int main (int argc, char const *argv[]) {
   int length = strlen(text);
-  tree_t suffixTree;
-  suffixTree.firstChild = malloc(sizeof(node_t));
+  Tree suffixTree;
+  suffixTree.firstChild = allocate(sizeof(Node));
   suffixTree.firstChild->edge = text;
   suffixTree.firstChild->length = 1;
   int i;
   for (i = 1; i < length; i++) {
-    addNextTree(&suffixTree, i, length);
+    add_next_tree(&suffixTree, i, length);
   }
 
 #ifndef NDEBUG
-  printTree(&suffixTree);
+  print_tree(&suffixTree);
 #endif
 }
