@@ -17,11 +17,8 @@ typedef struct Tree {
   node_t *firstChild;
 } tree_t;
 
-int compareChars(char *first, char *second) {
-  return *first == *second;
-}
-
-char *nodeLabelFrom(node_t *node) {
+#ifndef NDEBUG
+char *edgeTextFrom(node_t *node) {
   char *label = malloc(sizeof(node->edge) * (node->length + 1));
   memcpy(label, node->edge, node->length);
   memset(label + node->length, 0, 1);
@@ -30,11 +27,11 @@ char *nodeLabelFrom(node_t *node) {
 
 void printNode(node_t *node, int counter) {
   while (node != 0) {
-    debug("%d: %s %d \n", counter++, nodeLabelFrom(node), node->length);
+    debug("%d: %s %d \n", counter++, edgeTextFrom(node), node->length);
     if (node->child != 0) {
       printNode(node->child, counter);
     }
-    debug("New Sibling for %s\n", nodeLabelFrom(node));
+    debug("New Sibling for %s\n", edgeTextFrom(node));
     node = node->nextSibling;
   }
 }
@@ -43,6 +40,11 @@ void printTree(tree_t *tree) {
   node_t *child = tree->firstChild;
   int i = 0;
   printNode(child, i);
+}
+#endif
+
+int compareChars(char *first, char *second) {
+  return *first == *second;
 }
 
 int hasNextSibling(node_t *node) {
